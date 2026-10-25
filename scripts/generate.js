@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const POSTS_DIR = path.resolve(__dirname, '../content-site/content/posts');
 const KEY = process.env.DEEPSEEK_API_KEY || '';
-const TOPIC = process.env.TOPIC || '跨境支付合规与风控：个人开发者如何低门槛收款';
+const TOPIC = process.env.TOPIC || 'Cross-Border Payments & Compliance for Solo Developers';
 
 function slugify(s) {
   return s
@@ -25,7 +25,7 @@ function frontmatter(title, dateISO) {
 title: "${title}"
 date: "${dateISO}"
 draft: false
-tags: ["合规", "风控", "一人公司"]
+tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
 ---
 `;
@@ -58,7 +58,7 @@ async function main() {
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: '你是一位面向独立开发者/一人公司的技术博主，写作简洁、可落地、有具体操作。用简体中文写一篇 Markdown 技术博客，800~1200 字，带 3~5 个小标题，结尾给"下一步行动"。只输出 Markdown 正文，不要标题栏。' },
+          { role: 'system', content: 'You are a technical blogger for independent developers and one-person companies. Write concise, actionable, practical content in English as a Markdown technical article (600~900 words) with 3~5 section headings, and end with a "Next Steps" section. Output only the Markdown body, no front matter.' },
           { role: 'user', content: `主题：${TOPIC}` },
         ],
         temperature: 0.7,
