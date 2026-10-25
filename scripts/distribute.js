@@ -30,9 +30,9 @@ function parseFrontmatter(text) {
 function markPublished(file, dest) {
   const full = path.join(POSTS_DIR, file);
   const text = readFileSync(full, 'utf8');
-  const next = text.replace(/(^distribute:\s*)true/m, `$1false`).replace(/(^published:\s*).*$/m, `$1${dest}`);
-  if (!/^published:/m.test(text)) {
-    writeFileSync(full, text.replace(/(^distribute:\s*true$)/m, `$1\npublished: ${dest}`), 'utf8');
+  const next = text.replace(/(^distribute:\s*)true/m, `$1false`).replace(/(^distributed:\s*).*$/m, `$1${dest}`);
+  if (!/^distributed:/m.test(text)) {
+    writeFileSync(full, text.replace(/(^distribute:\s*true$)/m, `$1\ndistributed: ${dest}`), 'utf8');
   } else {
     writeFileSync(full, next, 'utf8');
   }
@@ -75,7 +75,7 @@ async function main() {
   const pending = [];
   for (const f of files) {
     const { meta, body } = parseFrontmatter(readFileSync(path.join(POSTS_DIR, f), 'utf8'));
-    if (meta.distribute === 'true' && !meta.published) pending.push({ file: f, meta, body });
+    if (meta.distribute === 'true' && !meta.distributed) pending.push({ file: f, meta, body });
   }
   if (pending.length === 0) {
     console.log('没有待分发的文章（distribute:true 且未发布）。');
