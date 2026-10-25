@@ -2,6 +2,7 @@
 // 用法：node scripts/distribute.js
 // 环境变量：DEVTO_API_KEY / HASHNODE_API_KEY / HASHNODE_PUBLICATION_ID / SITE_BASE_URL
 // 无 token 时进入 dry-run：只列出待分发文章并退出 0
+// 发布成功后把结果写入 notify-result.json（供 workflow 发飞书通知）
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,7 +46,9 @@ async function publishDevto({ title, body, file }) {
     body: JSON.stringify({ article: { title, body_markdown: body, published: true } }),
   });
   if (!resp.ok) throw new Error(`DEV.to ${resp.status}: ${await resp.text()}`);
+  const json = await resp.json();
   markPublished(file, 'devto');
+  return { platform: 'devto', title, url: json.url };
 }
 
 async function publishHashnode({ title, body, file }) {
@@ -62,6 +65,8 @@ async function publishHashnode({ title, body, file }) {
   const json = await resp.json();
   if (json.errors) throw new Error(`Hashnode: ${JSON.stringify(json.errors)}`);
   markPublished(file, 'hashnode');
+  const url = json.data?.publishPost?.post?.url;
+  return { platform: 'hashnode', title, url };
 }
 
 async function main() {
@@ -84,10 +89,15 @@ async function main() {
     console.log('dry-run：未配置 DEVTO_API_KEY / HASHNODE_API_KEY，未真正发布。');
     return;
   }
+  const published = [];
   for (const p of pending) {
     const title = p.meta.title || p.file;
-    if (DEVTO_KEY) await publishDevto({ title, body: p.body, file: p.file });
-    if (HASHNODE_KEY && HASHNODE_PUB_ID) await publishHashnode({ title, body: p.body, file: p.file });
+    if (DEVTO_KEY) published.push(await publishDevto({ title, body: p.body, file: p.file }));
+    if (HASHNODE_KEY && HASHNODE_PUB_ID) published.push(await publishHashnode({ title, body: p.body, file: p.file }));
+  }
+  if (published.length) {
+    writeFileSync(path.resolve(process.cwd(), 'notify-result.json'), JSON.stringify(published, null, 2), 'utf8');
+    console.log(`已写入 notify-result.json（${published.length} 条发布结果）`);
   }
   console.log('分发完成。');
 }

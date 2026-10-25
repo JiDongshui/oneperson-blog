@@ -9,7 +9,7 @@ on:
     paths: ['content-site/**', '.github/**']
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -49,3 +49,14 @@ jobs:
           HASHNODE_API_KEY: ${{ secrets.HASHNODE_API_KEY }}
           HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
           SITE_BASE_URL: "https://jidongshui.github.io/oneperson-blog/"
+      - name: 通知发布结果到飞书
+        run: node scripts/notify-feishu.js
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+      - name: 提交已发布标记，避免重复发布
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: mark published posts'
+          commit_user_name: 'op-ai-employee'
+          commit_user_email: 'op@local'
+          skip_dirty_check: false
