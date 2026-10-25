@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ site.LanguageCode | default "zh-cn" }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ block "title" . }}{{ .Site.Title }}{{ end }}</title>
+<style>
+body{max-width:760px;margin:40px auto;padding:0 20px;font-family:system-ui,sans-serif;line-height:1.7;color:#222}
+article{border-bottom:1px solid #eee;padding:14px 0}
+a{color:#0645ad;text-decoration:none}
+.meta{color:#888;font-size:.9em}
+h1{font-size:1.6em}
+footer{color:#aaa;font-size:.8em;margin-top:30px}
+</style>
+</head>
+<body>
+<header><h1><a href="{{ .Site.BaseURL }}">{{ .Site.Title }}</a></h1></header>
+<main>{{ block "main" . }}{{ end }}</main>
+<footer><p>由 DeepSeek + Hugo 自动生成 · 一人公司副业项目</p></footer>
+</body>
+</html>

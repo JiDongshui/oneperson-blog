@@ -1,0 +1,9 @@
+# ===== 一人公司副业站点 · Hugo 配置 =====
+# 构建命令见 .github/workflows/deploy.yml（hugo --source content-site）
+# 无外部主题：用本目录 layouts/ 自带模板，零依赖。
+
+baseURL = "/"
+languageCode = "zh-cn"
+title = "一人公司 · 全自动副业"
+theme = ""
+enableRobotsTXT = true

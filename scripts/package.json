@@ -1,0 +1,7 @@
+{
+  "name": "oneperson-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "阶段0-A 免费云最小闭环脚本：DeepSeek 生成文章 / 分发到 DEV.to / Hashnode"
+}

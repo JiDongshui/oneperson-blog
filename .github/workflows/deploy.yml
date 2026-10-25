@@ -1,0 +1,51 @@
+# ===== 构建部署 + 分发：Hugo → GitHub Pages；文章 → DEV.to / Hashnode =====
+# 触发：push 到 content-site/**（含 generate.yml 提交的新文章）
+# 凭证（GitHub Secrets）：DEVTO_API_KEY / HASHNODE_API_KEY / HASHNODE_PUBLICATION_ID
+name: deploy-and-distribute
+
+on:
+  push:
+    branches: [main]
+    paths: ['content-site/**', '.github/**']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.145.0'
+          extended: true
+      - name: 构建站点（source 在 content-site/）
+        run: hugo --source content-site --minify --baseURL "https://${{ github.repository_owner }}.github.io/"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: content-site/public
+      - uses: actions/deploy-pages@v4
+
+  distribute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 分发到 DEV.to / Hashnode
+        run: node scripts/distribute.js
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          HASHNODE_API_KEY: ${{ secrets.HASHNODE_API_KEY }}
+          HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
+          SITE_BASE_URL: "https://${{ github.repository_owner }}.github.io/"
