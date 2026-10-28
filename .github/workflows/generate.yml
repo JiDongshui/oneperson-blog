@@ -37,3 +37,9 @@ jobs:
           commit_user_name: 'op-ai-employee'
           commit_user_email: 'op@local'
           skip_dirty_check: false
+      # GITHUB_TOKEN 提交不会触发其他 workflow（GitHub 安全机制），
+      # 必须主动触发 deploy 才能把新文章发布到 DEV.to / 构建博客站
+      - name: 主动触发分发构建（构建站点 + 发布 DEV.to）
+        run: gh workflow run deploy-and-distribute
+        env:
+          GH_TOKEN: ${{ github.token }}
