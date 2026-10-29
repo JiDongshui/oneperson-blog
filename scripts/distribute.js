@@ -1,6 +1,6 @@
-// 把 content-site/content/posts/ 中待分发的文章发布到 DEV.to / Hashnode
+// 把 content-site/content/posts/ 中待分发的文章发布到 DEV.to（已砍 Hashnode）
 // 用法：node scripts/distribute.js
-// 环境变量：DEVTO_API_KEY / HASHNODE_API_KEY / HASHNODE_PUBLICATION_ID / SITE_BASE_URL
+// 环境变量：DEVTO_API_KEY / SITE_BASE_URL
 // 无 token 时进入 dry-run：只列出待分发文章并退出 0
 // 发布成功后把结果写入 notify-result.json（供 workflow 发飞书通知）
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -10,8 +10,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const POSTS_DIR = path.resolve(__dirname, '../content-site/content/posts');
 const DEVTO_KEY = process.env.DEVTO_API_KEY || '';
-const HASHNODE_KEY = process.env.HASHNODE_API_KEY || '';
-const HASHNODE_PUB_ID = process.env.HASHNODE_PUBLICATION_ID || '';
 const BASE = process.env.SITE_BASE_URL || 'https://example.github.io/';
 
 // 解析 frontmatter：返回 {meta, body}
@@ -26,17 +24,16 @@ function parseFrontmatter(text) {
   return { meta, body: m[2] };
 }
 
-// 把文章标记为已分发
-function markPublished(file, dest) {
+// 把文章标记为已分发（只发 DEV.to，标记 fixed 为 devto，避免多平台互相覆盖）
+function markPublished(file) {
   const full = path.join(POSTS_DIR, file);
   const text = readFileSync(full, 'utf8');
-  const next = text.replace(/(^distribute:\s*)true/m, `$1false`).replace(/(^distributed:\s*).*$/m, `$1${dest}`);
   if (!/^distributed:/m.test(text)) {
-    writeFileSync(full, text.replace(/(^distribute:\s*true$)/m, `$1\ndistributed: ${dest}`), 'utf8');
+    writeFileSync(full, text.replace(/(^distribute:\s*true$)/m, `$1\ndistributed: devto`), 'utf8');
   } else {
-    writeFileSync(full, next, 'utf8');
+    writeFileSync(full, text.replace(/(^distributed:\s*).*$/m, `$1devto`), 'utf8');
   }
-  console.log(`  已标记发布：${file} -> ${dest}`);
+  console.log(`  已标记发布：${file} -> devto`);
 }
 
 async function publishDevto({ title, body, file }) {
@@ -47,26 +44,8 @@ async function publishDevto({ title, body, file }) {
   });
   if (!resp.ok) throw new Error(`DEV.to ${resp.status}: ${await resp.text()}`);
   const json = await resp.json();
-  markPublished(file, 'devto');
+  markPublished(file);
   return { platform: 'devto', title, url: json.url };
-}
-
-async function publishHashnode({ title, body, file }) {
-  const canonical = BASE;
-  const query = `mutation PublishPost($input: PublishPostInput!) { publishPost(input: $input) { post { url } } }`;
-  const resp = await fetch('https://api.hashnode.com/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: HASHNODE_KEY },
-    body: JSON.stringify({
-      query,
-      variables: { input: { title, contentMarkdown: body, publicationId: HASHNODE_PUB_ID, canonicalUrl: canonical } },
-    }),
-  });
-  const json = await resp.json();
-  if (json.errors) throw new Error(`Hashnode: ${JSON.stringify(json.errors)}`);
-  markPublished(file, 'hashnode');
-  const url = json.data?.publishPost?.post?.url;
-  return { platform: 'hashnode', title, url };
 }
 
 async function main() {
@@ -84,16 +63,15 @@ async function main() {
   console.log(`待分发 ${pending.length} 篇：`);
   for (const p of pending) console.log(`  - ${p.file}（${p.meta.title || '无标题'}）`);
 
-  const dry = !DEVTO_KEY && !HASHNODE_KEY;
+  const dry = !DEVTO_KEY;
   if (dry) {
-    console.log('dry-run：未配置 DEVTO_API_KEY / HASHNODE_API_KEY，未真正发布。');
+    console.log('dry-run：未配置 DEVTO_API_KEY，未真正发布。');
     return;
   }
   const published = [];
   for (const p of pending) {
     const title = p.meta.title || p.file;
-    if (DEVTO_KEY) published.push(await publishDevto({ title, body: p.body, file: p.file }));
-    if (HASHNODE_KEY && HASHNODE_PUB_ID) published.push(await publishHashnode({ title, body: p.body, file: p.file }));
+    published.push(await publishDevto({ title, body: p.body, file: p.file }));
   }
   if (published.length) {
     writeFileSync(path.resolve(process.cwd(), 'notify-result.json'), JSON.stringify(published, null, 2), 'utf8');

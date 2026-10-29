@@ -1,6 +1,6 @@
-# ===== 构建部署 + 分发：Hugo → GitHub Pages；文章 → DEV.to / Hashnode =====
+# ===== 构建部署 + 分发：Hugo → GitHub Pages；文章 → DEV.to =====
 # 触发：push 到 content-site/**（含 generate.yml 提交的新文章）
-# 凭证（GitHub Secrets）：DEVTO_API_KEY / HASHNODE_API_KEY / HASHNODE_PUBLICATION_ID
+# 凭证（GitHub Secrets）：DEVTO_API_KEY
 name: deploy-and-distribute
 
 on:
@@ -43,12 +43,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: 分发到 DEV.to / Hashnode
+      - name: 分发到 DEV.to
         run: node scripts/distribute.js
         env:
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
-          HASHNODE_API_KEY: ${{ secrets.HASHNODE_API_KEY }}
-          HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
           SITE_BASE_URL: "https://jidongshui.github.io/oneperson-blog/"
       - name: 通知发布结果到飞书
         run: node scripts/notify-feishu.js
@@ -61,3 +59,19 @@ jobs:
           commit_user_name: 'op-ai-employee'
           commit_user_email: 'op@local'
           skip_dirty_check: false
+
+  # 构建或分发任一失败时，主动通知董事长（原来只有成功才通知）
+  alert-on-failure:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [build, distribute]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 通知失败到飞书
+        run: node scripts/notify-failure.js
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          WORKFLOW: deploy-and-distribute
