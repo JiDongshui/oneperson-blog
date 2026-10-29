@@ -36,11 +36,15 @@ function markPublished(file) {
   console.log(`  已标记发布：${file} -> devto`);
 }
 
-// DEV.to 发布 published:true 的文章必须至少一个 tag，否则返回 422
+// DEV.to tag 只允许字母数字：连字符/空格等会被 422 拒绝（solo-developer → solodeveloper）
 function toTags(metaTags) {
-  if (!metaTags) return ['indie-saas'];
-  try { const a = JSON.parse(metaTags); if (Array.isArray(a)) return a.map(String).slice(0, 4); } catch {}
-  return String(metaTags).split(/[\s,]+/).filter(Boolean).slice(0, 4);
+  let arr = [];
+  if (!metaTags) arr = ['indie-saas'];
+  else {
+    try { const a = JSON.parse(metaTags); arr = Array.isArray(a) ? a.map(String) : []; } catch {}
+    if (!arr.length) arr = String(metaTags).split(/[\s,]+/).filter(Boolean);
+  }
+  return arr.map(t => t.replace(/[^a-zA-Z0-9]/g, '')).filter(t => t.length).slice(0, 4);
 }
 async function publishDevto({ title, body, file, tags }) {
   const resp = await fetch('https://dev.to/api/articles', {
