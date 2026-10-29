@@ -1,6 +1,6 @@
 ---
 title: "Cross-Border Payments & Compliance for Solo Developers"
-date: "2026-10-29T09:53:40.259Z"
+date: "2026-10-29T15:01:38.994Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
@@ -8,62 +8,81 @@ distribute: true
 
 # Cross-Border Payments & Compliance for Solo Developers
 
-You built a product people want. Then the first international customer tries to pay you, and suddenly you're staring at a wall of tax forms, currency conversions, and card declines. Cross-border payments are one of the few areas where a solo developer can get into real legal trouble without realizing it—not because you did anything malicious, but because compliance doesn't scale down to one person.
+You built a product people want. Then the first international customer tries to pay you, and suddenly you're staring at a wall of taxes, currency conversion, and legal jargon that no tutorial prepared you for. Cross-border payments are one of the few areas where getting it wrong can cost you real money—or land you in regulatory trouble.
 
-This guide covers the practical mechanics: how to accept money globally, what you're actually required to do, and where to draw the line between "handle it yourself" and "pay someone to handle it."
+This guide covers the practical minimum you need to accept international payments as a solo developer or one-person company, without hiring a lawyer for every transaction.
 
-## Pick a Merchant of Record or Own the Compliance
+## Start With the Right Payment Processor
 
-The single biggest decision is whether to use a **Merchant of Record (MoR)** or a plain payment processor.
+Your choice of processor determines how much compliance work you inherit. Some providers act as the "merchant of record" (MoR), meaning they handle sales tax, VAT, and refunds on your behalf. Others are pure payment gateways, leaving you responsible for tax remittance.
 
-A processor like Stripe or Paddle's non-MoR mode makes *you* the seller of record. You're responsible for collecting and remitting sales tax/VAT/GST in every jurisdiction where you have tax nexus. For digital products sold to EU consumers, that means VAT registration and quarterly filings across potentially 27 countries—unless you use the One-Stop Shop (OSS) scheme, which still requires registration and reporting.
+For solo developers, MoR providers are usually worth the fee:
 
-A **Merchant of Record** (Paddle, Lemon Squeezy, FastSpring) buys your product and resells it. They handle VAT, sales tax, invoicing, refunds, and chargebacks. You get a single payout. The trade-off is fees (typically 5% + payment costs) and less control over the checkout experience.
+- **Paddle** and **Lemon Squeezy** handle VAT/GST globally, including the EU's complex rules.
+- **Stripe** is flexible and developer-friendly but makes *you* the merchant of record—you own the tax obligations.
+- **Gumroad** works for simple digital products but takes a larger cut.
 
-For a solo developer, the MoR is almost always the right call. The math: EU VAT compliance alone can cost $1,000+ per year in accounting and filings. If your international revenue is under six figures, a 5% fee is cheaper than the alternative.
+If you sell SaaS or digital goods to consumers in the EU, MoR providers eliminate the need to register for VAT in 27 countries. That alone justifies the ~5% fee.
 
-```text
-Processor (Stripe/PayPal):  ~3% fees + YOU handle tax globally
-MoR (Paddle/Lemon Squeezy): ~5% fees + THEY handle tax globally
+```js
+// Stripe example: create a checkout session with automatic tax
+const session = await stripe.checkout.sessions.create({
+  line_items: [{ price: PRICE_ID, quantity: 1 }],
+  mode: 'subscription',
+  automatic_tax: { enabled: true },
+  customer_update: { address: 'auto' },
+  success_url: 'https://yourapp.com/success',
+});
 ```
 
-## Understand Your Tax Obligations Before You Scale
+Note that `automatic_tax` requires you to configure tax registrations in the Stripe dashboard—it calculates, but doesn't remit.
 
-Two tax concepts trip up solo developers: **VAT/GST registration thresholds** and **US sales tax nexus**.
+## Understand Your Tax Obligations by Region
 
-For EU/UK sales of digital services to consumers (B2C), the place-of-supply rule means you charge the *customer's* local VAT rate from the first euro—no threshold. This is why MoRs exist. If you sell B2B, the reverse-charge mechanism applies and the customer self-accounts for VAT, which is simpler but requires validating VAT numbers via VIES.
+The three buckets that catch solo developers:
 
-US sales tax is state-level. Post-*Wayfair*, economic nexus thresholds (often $100k or 200 transactions per state) trigger collection duties. Software-as-a-service taxability varies wildly by state. A MoR absorbs this headache; if you go direct, use a service like TaxJar or Avalara and budget for it.
+**VAT (EU/UK).** Digital services to consumers are taxed at the buyer's location, not yours. Thresholds vary, but once you cross them (often €10,000 for EU cross-border), you must collect and remit. MoR providers handle this; direct Stripe users must register via the One Stop Shop (OSS) or use a service like TaxJar.
 
-The practical rule: **don't register for VAT/GST yourself unless you're doing meaningful volume in a single jurisdiction.** Use an MoR until the fees genuinely hurt, then hire an accountant who specializes in cross-border digital sales.
+**Sales tax (US).** Economic nexus rules mean you owe tax once you exceed state-specific thresholds—typically $100,000 in sales or 200 transactions. A handful of early customers rarely triggers this, but track it.
 
-## Choose Payout Rails That Actually Reach You
+**GST (Australia, Canada, India).** Similar low thresholds for digital services. Canada's GST/HST registration kicks in at CAD $30,000.
 
-Accepting payment is half the problem; getting the money into your bank account is the other. Your options:
+Keep a simple spreadsheet mapping each country's threshold and your current revenue against it. Review quarterly. This is the single highest-value compliance habit you can build.
 
-- **Stripe/PayPal payouts** — Fast, but currency conversion spreads eat 1–3%. PayPal in particular is notorious for poor FX rates.
-- **Wise Business** — Multi-currency accounts with mid-market rates. Great for holding USD/EUR/GBP and converting when favorable.
-- **Local payment methods** — In many markets, cards are secondary. Offer iDEAL (Netherlands), SEPA (EU), Pix (Brazil), or UPI (India) via your processor. Stripe and Adyen support many of these natively.
+## Handle Currency and Fees Without Losing Margin
 
-Watch for **payout minimums and holds**. New accounts often face rolling reserves (5–10% held for 90+ days). Factor this into cash flow—a solo developer can't absorb a surprise 90-day hold on their first big month.
+Cross-border payments leak money in three places: FX conversion, processor fees, and chargebacks.
 
-## Sanctions, KYC, and the Compliance You Can't Ignore
+- **Price in local currencies** where possible. Stripe and Paddle support multi-currency pricing; customers convert mentally and abandon less often.
+- **Absorb FX or pass it on deliberately.** A 2–3% FX spread on top of a 3% processor fee eats a meaningful chunk of a $9/month subscription. Build it into your pricing.
+- **Watch chargeback risk.** International cards have higher dispute rates. Use Stripe Radar or equivalent fraud rules, and require 3D Secure for high-risk regions.
 
-Even with an MoR, you remain responsible for **sanctions screening** and **know-your-customer** basics in some setups. Payment providers run KYC on you, and they'll freeze funds if your business looks like a shell or your customers cluster in sanctioned regions.
+```python
+# Rough margin check before setting a price
+def net_revenue(price_usd, fx_spread=0.025, processor_fee=0.029, fixed_fee=0.30):
+    after_fx = price_usd * (1 - fx_spread)
+    return after_fx * (1 - processor_fee) - fixed_fee
 
-Practical steps:
+print(net_revenue(9.00))  # ~$8.19 before tax remittance
+```
 
-1. **Keep your business entity clean.** Register a real company (LLC, Ltd, etc.), use a business bank account, and match names across processor, bank, and tax filings. Mismatches trigger manual reviews and delays.
-2. **Screen for sanctioned countries.** The US OFAC list, EU sanctions, and UK OFSI list are non-negotiable. Most processors block these automatically, but if you sell via invoices or crypto, you're on the hook.
-3. **Document your customers.** For B2B, retain VAT IDs and invoices. For high-value transactions, keep records. If a processor asks for proof during a review, having it ready prevents account freezes.
-4. **Don't touch crypto payouts without advice.** Crypto introduces AML obligations and tax complexity that solo developers routinely underestimate.
+## Keep Records That Survive an Audit
+
+You don't need a CFO, but you do need clean records. If a tax authority asks questions, "I used Paddle" is a valid answer—*if* you can produce the transaction reports.
+
+- Export monthly transaction reports from your processor and store them (S3, a dated folder, anywhere durable).
+- Keep customer location data—IP address and billing address at time of purchase. This is your evidence for tax jurisdiction.
+- Separate business and personal banking. A dedicated business account (Wise, Mercury, or a local equivalent) simplifies everything.
+- Register as a business entity in your jurisdiction. Accepting payments as an individual exposes you to personal liability.
+
+If you use an MoR provider, download their tax invoices monthly. They are your proof of remittance.
 
 ## Next Steps
 
-1. **Audit your current setup.** Are you a seller of record? If yes, list every country you've sold to and confirm your tax filings are current. If unsure, talk to an accountant this month.
-2. **Move to a Merchant of Record** if international revenue is under ~$100k/year and you're handling tax manually. Migrate your checkout and update your terms of service.
-3. **Open a Wise Business account** for multi-currency payouts and compare your effective FX cost against your current processor.
-4. **Write a one-page compliance checklist** covering entity name matching, sanctions screening, invoice retention, and payout reserves. Review it quarterly.
-5. **Set a revenue threshold** (e.g., $250k/year) at which you'll revisit going direct with a processor and hiring cross-border tax help.
+1. **Pick your processor this week.** If you sell digital goods to EU consumers and don't want VAT registration headaches, start with Paddle or Lemon Squeezy. Otherwise, configure Stripe with `automatic_tax`.
+2. **Build a threshold tracker.** A spreadsheet with columns for country, threshold, current revenue, and status. Update it monthly.
+3. **Set up a business bank account** and route all payments through it.
+4. **Automate report exports.** A cron job or Zapier flow that dumps monthly transaction CSVs to cloud storage takes an hour to build and saves you later.
+5. **Review pricing for FX margin.** Run the calculation above for your top three price points and adjust if needed.
 
-Cross-border payments reward boring, documented decisions. The developers who get burned are the ones who optimize for fees and ignore compliance until a frozen account forces the issue.
+Cross-border compliance isn't glamorous, but it's finite. Handle the three buckets—tax, currency, records—and you can sell globally from a one-person shop without surprises.
