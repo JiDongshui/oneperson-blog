@@ -1,6 +1,6 @@
 ---
 title: "Cross-Border Payments & Compliance for Solo Developers"
-date: "2026-10-29T15:02:10.378Z"
+date: "2026-10-29T15:03:26.325Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
@@ -8,56 +8,54 @@ distribute: true
 
 # Cross-Border Payments & Compliance for Solo Developers
 
-If you sell software, courses, or services to customers outside your home country, you need a way to get paid and a way to stay out of trouble with tax and financial regulators. For a one-person company, this is the part of the business nobody warns you about. Here's a practical map of the landscape, with the tradeoffs that actually matter at your scale.
+Selling software, courses, or SaaS to customers outside your home country is one of the highest-leverage moves a solo developer can make. It also introduces a tax and payments surface area that most indie hackers underestimate. This guide covers the practical decisions: how to collect money, how to stay compliant, and where the sharp edges are.
 
-## Start With the Right Payment Rail
+## 1. Choose a Merchant of Record if you want to skip the hard parts
 
-The first decision is how money reaches you. Most solo developers default to Stripe or Paddle, but the choice affects your compliance burden more than you might expect.
+The single biggest compliance decision is whether you want to be a **merchant of record (MoR)** or use one.
 
-**Merchant of Record (MoR) platforms** — Paddle, Lemon Squeezy, and Gumroad — sit between you and the customer. They are the legal seller, which means they handle sales tax, VAT, and GST collection and remittance on your behalf. You receive a single payout. The tradeoff is fees (typically 5–10% plus per-transaction costs) and less control over checkout and customer relationships.
+As a merchant of record, *you* are the legal seller. You are responsible for collecting, remitting, and filing sales tax/VAT/GST in every jurisdiction where you have customers. For a solo dev selling to 30 countries, that is a full-time job you did not sign up for.
 
-**Payment processors** — Stripe, PayPal, and Wise — put you in the seller's seat. You get lower fees and full control, but you become responsible for tax registration, collection, and filing in every jurisdiction where you have tax obligations. Stripe Tax can calculate and collect the right amount, but *you* still register and file.
+An MoR (Paddle, Lemon Squeezy, FastSpring, and similar) sits between you and the customer. They are the legal seller, they handle tax calculation and remittance globally, and they pay you a net settlement. The cost is typically 5–8% of revenue plus payment fees — higher than raw Stripe, but often cheaper than the accounting and legal time you'd otherwise burn.
 
-For a solo developer just starting out, an MoR is usually the right call. It's boring, and boring is what you want when you're the entire finance department. Once volume justifies the fee difference, you can migrate to a processor and automate filings with tools like Stripe Tax plus a service like TaxJar or Paddle's own invoicing.
+**Rule of thumb:** if you're selling digital goods to consumers globally and revenue is under ~$500k/year, an MoR is almost always the right call. Use raw Stripe/PayPal only if you're selling B2B with a small number of well-understood jurisdictions.
 
-One more thing: get paid in a currency you can actually use. Wise multi-currency accounts let you hold balances in USD, EUR, and GBP and convert at near-mid-market rates, which beats letting a processor auto-convert at a 2–3% spread.
+## 2. Understand where tax nexus actually bites
 
-## Know Your Tax Obligations (and Their Thresholds)
+If you go the direct route, you need to know where you owe tax. The two mechanisms that matter most:
 
-Cross-border tax has two dimensions: **income tax** (where you're resident) and **consumption tax** (where the customer is). The second one is where solo developers get surprised.
+- **VAT (EU/UK):** Since 2015/2021 reforms, non-EU sellers of digital services to EU consumers must charge VAT from the *first euro* of sales — there is no threshold for digital goods. The OSS (One-Stop Shop) scheme lets you register in one EU country and file a single quarterly return covering all member states. The UK has a separate £90k threshold for non-established sellers (check current rules).
+- **US sales tax:** Post-*Wayfair*, states can require collection based on **economic nexus** — typically $100k in sales or 200 transactions per state. If you sell through an MoR, they handle this. If not, you register state-by-state as you cross thresholds.
 
-- **EU VAT**: Digital services to EU consumers are taxed at the customer's country rate. The One-Stop-Shop (OSS) scheme lets you file a single return for all EU sales — but you must register. There's no minimum threshold for non-EU sellers.
-- **UK VAT**: Similar story, with a £90,000 registration threshold that doesn't apply to non-established sellers of digital services.
-- **US sales tax**: Economic nexus thresholds vary by state (commonly $100k in sales or 200 transactions). Marketplaces and MoRs usually collect for you; direct sales may not.
-- **GST in Australia, Canada, Japan, and others**: Each has its own registration trigger. Most are low or zero for digital services.
+The trap: people assume "I'm small, nobody cares." Tax authorities care about *nexus*, not revenue. A $50k/year product with a few thousand EU customers still requires VAT registration.
 
-The practical rule: if you sell digital goods to consumers, assume you have registration obligations almost everywhere, and let an MoR absorb them until you're big enough to handle them yourself. Document your reasoning — if a tax authority ever asks, a clear record of why you chose your structure is worth a lot.
+## 3. Pick a payout rail that doesn't eat your margin
 
-## Handle the Money-Laundering and Sanctions Layer
+Getting paid is a separate problem from collecting tax. Options:
 
-"Compliance" isn't only tax. Payment providers are regulated financial institutions, and they push Know Your Customer (KYC) and anti-money-laundering (AML) duties onto you as a merchant.
+- **Stripe/PayPal direct:** Good rates (2.9% + $0.30), but you're the merchant of record and handle compliance yourself.
+- **MoR payouts:** Higher headline fee, but settlement is clean. Watch payout schedules — some hold funds for 30+ days.
+- **Wise / Payoneer business accounts:** Useful for receiving multi-currency settlements and converting at near-mid-market rates. Avoid letting a platform auto-convert at 2–3% FX spreads if you can hold balances and convert deliberately.
 
-Expect to provide: proof of identity, business registration (or a sole-trader declaration), a description of what you sell, and sometimes a website review. Keep your Stripe or Paddle dashboard updated — a stale business description is a common cause of frozen payouts.
+Currency strategy matters more than people think: if you price in USD but your costs are in EUR, FX swings are a real P&L line item. Consider pricing in your customers' local currencies (MoRs handle this) and holding a small FX buffer.
 
-Sanctions screening matters if you sell to businesses or high-risk regions. Most processors screen automatically, but you should know your customer base. If you sell to anyone in a sanctioned country or to entities on restricted lists, stop and get advice before accepting the payment. A single blocked transaction can trigger an account review that takes weeks to resolve.
+## 4. Keep the paperwork you'll be asked for
 
-## Protect Yourself With Simple Operational Habits
+Even with an MoR, you need a paper trail:
 
-You don't need a compliance department. You need a handful of habits:
+- **W-8BEN / W-8BEN-E:** US platforms (Stripe, Paddle, etc.) require this to confirm you're a non-US person and apply treaty withholding rates. Fill it out once and keep it current.
+- **Invoices:** Most jurisdictions require sequentially numbered invoices with your business details, the customer's location, and the tax treatment. MoRs generate these; if you're direct, use a tool like Invoice Ninja or a Stripe invoicing setup.
+- **Records:** Keep transaction logs for the statutory period (often 6–10 years depending on country). Export CSVs monthly; don't rely on a dashboard you might lose access to.
 
-1. **Separate accounts.** A dedicated business bank account and a dedicated payment processor account. Never mix personal and business funds — it complicates everything from tax to KYC.
-2. **Keep records.** Invoices, payout reports, and exchange-rate records for every transaction. Most jurisdictions require you to retain these for 5–7 years.
-3. **Reconcile monthly.** Match processor payouts to your bank deposits and your accounting ledger. A 30-minute monthly routine prevents a painful annual cleanup.
-4. **Watch thresholds.** Set calendar reminders for the registration thresholds in your main markets, and review them quarterly as your revenue grows.
-5. **Read the fine print on refunds and chargebacks.** Cross-border chargebacks are expensive and slow. Clear refund policies reduce disputes.
+## 5. Register a real business entity early
+
+Selling cross-border as a sole proprietor works until it doesn't. A limited company (Ltd, LLC, GmbH, etc.) gives you liability separation and makes it far easier to open business bank accounts, sign MoR contracts, and claim treaty benefits. The cost is modest (a few hundred dollars/euros) and it removes a category of "can I even do this?" friction with payment processors. Talk to a local accountant once — a one-hour consult on your specific setup is worth more than any blog post.
 
 ## Next Steps
 
-Pick one action from each area and do it this week:
-
-- **Payments**: If you're not yet using an MoR, open a Paddle or Lemon Squeezy account and run a test transaction end-to-end. If you already use a processor, enable Stripe Tax and check your nexus exposure in your top three markets.
-- **Tax**: List every country you've sold to in the last 12 months. For each, note whether you're under an MoR (covered) or selling directly (exposed). Register where you're exposed before the next filing deadline.
-- **Compliance**: Update your processor dashboard with an accurate business description and confirm your KYC documents are current.
-- **Operations**: Open a Wise multi-currency account, set up a monthly reconciliation reminder, and create a folder structure for invoices and payout reports.
-
-None of this is glamorous, but it's the difference between a business that scales smoothly and one that gets its payouts frozen at the worst possible moment. Do the boring work now, and you can spend your time on the product.
+1. **Decide MoR vs. direct** based on your customer mix and revenue. Default to MoR for consumer digital goods.
+2. **Fill out your W-8BEN** with your payment platform today if you haven't already.
+3. **Map your nexus:** list the countries/states where you have customers and check thresholds. If you're direct-selling into the EU, start the OSS registration.
+4. **Open a multi-currency business account** (Wise/Payoneer) and stop letting platforms auto-convert.
+5. **Book one accountant consult** focused on cross-border digital sales — bring your revenue-by-country numbers.
+6. **Set a monthly export** of transaction records to your own storage.
