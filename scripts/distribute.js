@@ -36,11 +36,17 @@ function markPublished(file) {
   console.log(`  已标记发布：${file} -> devto`);
 }
 
-async function publishDevto({ title, body, file }) {
+// DEV.to 发布 published:true 的文章必须至少一个 tag，否则返回 422
+function toTags(metaTags) {
+  if (!metaTags) return ['indie-saas'];
+  try { const a = JSON.parse(metaTags); if (Array.isArray(a)) return a.map(String).slice(0, 4); } catch {}
+  return String(metaTags).split(/[\s,]+/).filter(Boolean).slice(0, 4);
+}
+async function publishDevto({ title, body, file, tags }) {
   const resp = await fetch('https://dev.to/api/articles', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': DEVTO_KEY },
-    body: JSON.stringify({ article: { title, body_markdown: body, published: true } }),
+    body: JSON.stringify({ article: { title, body_markdown: body, published: true, tags } }),
   });
   if (!resp.ok) throw new Error(`DEV.to ${resp.status}: ${await resp.text()}`);
   const json = await resp.json();
@@ -71,7 +77,8 @@ async function main() {
   const published = [];
   for (const p of pending) {
     const title = p.meta.title || p.file;
-    published.push(await publishDevto({ title, body: p.body, file: p.file }));
+    const tags = toTags(p.meta.tags);
+    published.push(await publishDevto({ title, body: p.body, file: p.file, tags }));
   }
   if (published.length) {
     writeFileSync(path.resolve(process.cwd(), 'notify-result.json'), JSON.stringify(published, null, 2), 'utf8');
