@@ -4,6 +4,7 @@ date: "2026-11-03T10:47:23.965Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
+distributed: devto
 ---
 
 # Cross-Border Payments & Compliance for Solo Developers
