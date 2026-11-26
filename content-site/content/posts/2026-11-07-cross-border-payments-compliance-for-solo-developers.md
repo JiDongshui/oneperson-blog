@@ -4,6 +4,7 @@ date: "2026-11-07T10:00:10.523Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
+distributed: devto
 ---
 
 Selling software or services internationally is easier than ever, but getting paid across borders—and staying compliant—is where solo developers usually get stuck. Banks ask for business plans, payment processors freeze accounts without warning, and tax rules change by country. This guide covers the practical essentials: choosing a payment stack, handling tax and reporting obligations, and keeping your accounts from being flagged.

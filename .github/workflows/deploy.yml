@@ -64,7 +64,7 @@ jobs:
           commit_message: 'chore: mark published posts'
           commit_user_name: 'op-ai-employee'
           commit_user_email: 'op@local'
-          skip_dirty_check: false
+          skip_dirty_check: true
 
   # 构建或分发任一失败时，主动通知董事长（原来只有成功才通知）
   alert-on-failure:
