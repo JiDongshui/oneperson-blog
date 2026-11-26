@@ -37,17 +37,6 @@ jobs:
           commit_user_name: 'op-ai-employee'
           commit_user_email: 'op@local'
           skip_dirty_check: false
-      # GITHUB_TOKEN 提交不会触发其他 workflow（GitHub 安全机制），
-      # 必须主动触发 deploy 才能把新文章发布到 DEV.to / 构建博客站。
-      # 触发需要具有 Actions 写权限的 token：配置 secret ACTIONS_PAT（未配置时仅警告，文章仍已提交成功）
-      - name: 主动触发分发构建（构建站点 + 发布 DEV.to）
-        run: |
-          if [ -n "${ACTIONS_PAT}" ]; then
-            gh workflow run deploy-and-distribute
-            echo "已触发 deploy-and-distribute"
-          else
-            echo "::warning::未配置 ACTIONS_PAT secret，无法自动触发 deploy。文章已提交，请手动 Run workflow 或 push 触发。"
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.ACTIONS_PAT }}
-          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
+      # 提交使用 GITHUB_TOKEN，按 GitHub 安全机制不会触发 push 型 workflow。
+      # 因此 deploy-and-distribute 改为监听本 workflow 的完成事件（workflow_run）自动触发，
+      # 不再依赖 ACTIONS_PAT（此前 PAT 过期，导致 11-24 起“主动触发分发”步骤持续失败）。

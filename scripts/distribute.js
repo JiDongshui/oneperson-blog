@@ -79,14 +79,30 @@ async function main() {
     return;
   }
   const published = [];
+  const failed = [];
   for (const p of pending) {
     const title = p.meta.title || p.file;
     const tags = toTags(p.meta.tags);
-    published.push(await publishDevto({ title, body: p.body, file: p.file, tags }));
+    try {
+      published.push(await publishDevto({ title, body: p.body, file: p.file, tags }));
+    } catch (e) {
+      // 单篇失败不中断整批：记录后继续，避免一篇被 DEV.to 拒就拖垮整个 workflow
+      failed.push({ file: p.file, title, error: String(e.message || e).slice(0, 300) });
+      console.error(`  发布失败：${p.file} -> ${e.message}`);
+    }
   }
   if (published.length) {
     writeFileSync(path.resolve(process.cwd(), 'notify-result.json'), JSON.stringify(published, null, 2), 'utf8');
     console.log(`已写入 notify-result.json（${published.length} 条发布结果）`);
+  }
+  if (failed.length) {
+    writeFileSync(path.resolve(process.cwd(), 'distribute-failed.json'), JSON.stringify(failed, null, 2), 'utf8');
+    console.log(`有 ${failed.length} 篇发布失败（已记录 distribute-failed.json），其余已成功。`);
+  }
+  // 只有“全部失败且一篇都没成功”才让 workflow 失败触发告警；部分成功按成功处理
+  if (published.length === 0 && failed.length > 0) {
+    console.error('全部待分发文章均发布失败。');
+    process.exit(1);
   }
   console.log('分发完成。');
 }

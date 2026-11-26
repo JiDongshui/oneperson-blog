@@ -9,7 +9,44 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const POSTS_DIR = path.resolve(__dirname, '../content-site/content/posts');
 const KEY = process.env.DEEPSEEK_API_KEY || '';
-const TOPIC = process.env.TOPIC || 'Cross-Border Payments & Compliance for Solo Developers';
+
+// 选题池：按日期轮换，避免每天生成同一标题
+// （此前 TOPIC 硬编码单一主题，导致 DEV.to 上 30 篇标题完全相同）
+const TOPICS = [
+  'How Solo Developers Can Accept International Payments Without High Fees',
+  'Why One-Person Companies Should Automate Their Content Pipeline',
+  'Stripe vs Paddle vs Lemon Squeezy: A Practical Comparison for Indie Makers',
+  'Pricing Your First SaaS Product as a Solo Founder',
+  'Tax and Invoicing Basics for Solo Developers Selling Worldwide',
+  'How to Launch a Digital Product in a Single Weekend',
+  'Using GitHub Actions to Run a One-Person Business on Autopilot',
+  'A Beginner Guide to Writing Landing Pages That Convert',
+  'SEO Basics for Solo Developer Blogs',
+  'How to Handle Refunds and Chargebacks as an Indie Seller',
+  'Building a Newsletter Audience Before You Even Have a Product',
+  'Choosing the Right Domain and Branding for a One-Person Company',
+  'How to Protect Your Indie SaaS from Fraud and Abuse',
+  'A Realistic Look at Passive Income for Solo Developers',
+  'How to Onboard Your First Paying Customers',
+  'Simple Analytics Every Solo Founder Should Track',
+  'How to Write Product Documentation That Actually Sells',
+  'Legal Checklist Before Launching a Global Digital Product',
+  'Time Management Systems That Work for Solo Founders',
+  'How to Outsource Your First Tasks Without Losing Control',
+  'Turning a Technical Skill into a Recurring Revenue Product',
+  'Common Mistakes New Indie SaaS Founders Make',
+  'How to Build Trust With Customers as a One-Person Brand',
+  'A Minimal Tech Stack for a Solo Software Business',
+];
+
+function pickTopicByDate() {
+  const now = new Date();
+  const start = Date.UTC(now.getUTCFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - start) / 86400000);
+  return TOPICS[dayOfYear % TOPICS.length];
+}
+
+const TOPIC = (process.env.TOPIC && process.env.TOPIC.trim()) || pickTopicByDate();
 
 function slugify(s) {
   return s

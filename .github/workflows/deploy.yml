@@ -7,7 +7,10 @@ on:
   push:
     branches: [main]
     paths: ['content-site/**', '.github/**']
-  workflow_dispatch:    # 允许 generate.yml 主动触发，也支持手动触发
+  workflow_dispatch:    # 允许手动触发
+  workflow_run:         # generate-content 完成后自动触发（替代曾依赖的 ACTIONS_PAT）
+    workflows: ["generate-content"]
+    types: [completed]
 
 permissions:
   contents: write
@@ -21,6 +24,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - name: 安装 Hugo
@@ -38,6 +42,7 @@ jobs:
 
   distribute:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,6 +58,7 @@ jobs:
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
       - name: 提交已发布标记，避免重复发布
+        if: always()
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'chore: mark published posts'
