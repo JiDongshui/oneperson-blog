@@ -4,6 +4,7 @@ date: "2026-11-27T12:08:31.463Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
+distributed: devto
 ---
 
 # How to Outsource Your First Tasks Without Losing Control
