@@ -4,6 +4,7 @@ date: "2026-11-28T11:39:29.432Z"
 draft: false
 tags: ["solo-developer", "cross-border-payments", "indie-saas"]
 distribute: true
+distributed: devto
 ---
 
 # Turning a Technical Skill into a Recurring Revenue Product
